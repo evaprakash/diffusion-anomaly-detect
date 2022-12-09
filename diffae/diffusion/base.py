@@ -17,7 +17,7 @@ from model.nn import mean_flat
 from typing import NamedTuple, Tuple
 from choices import *
 from torch.cuda.amp import autocast
-from diffusion.kl_nn import *
+from diffusion.kl_nn import * # Commented to allow for debugging
 import torch.nn.functional as F
 
 from dataclasses import dataclass

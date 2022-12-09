@@ -114,9 +114,9 @@ def video_64_autoenc():
     conf = ffhq64_autoenc()
     conf.data_name = 'video'
     conf.eval_num_images = 5_000
-    conf.eval_every_samples = 10_000_000
-    conf.eval_ema_every_samples = 10_000_000
-    conf.total_samples = 10_000_000
+    conf.eval_every_samples = 5_000_000
+    conf.eval_ema_every_samples = 5_000_000
+    conf.total_samples = 5_000_000
     conf.batch_size = 16
     conf.name = 'video_autoenc'
     return conf

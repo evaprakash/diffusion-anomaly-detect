@@ -33,7 +33,7 @@ class LitModel(pl.LightningModule):
         if conf.seed is not None:
             pl.seed_everything(conf.seed)
 
-        #self.kl_model = KL_NN()
+        self.kl_model = KL_NN()
         
         self.save_hyperparameters(conf.as_dict_jsonable())
 
@@ -409,7 +409,7 @@ class LitModel(pl.LightningModule):
                 losses = self.sampler.training_losses(model=self.model,
                                                       x_start=x_start, x_enc=x_enc,
                                                       t=t, enc_dims=self.conf.enc_dims,
-                                                      kl_model=None)
+                                                      kl_model=self.kl_model)
             elif self.conf.train_mode.is_latent_diffusion():
                 """
                 training the latent variables!

@@ -465,7 +465,7 @@ class Video_Dataset(Dataset):
                 frame_batch = torch.cat((frame_batch, frame_img), dim=0)
             n += 1
         
-        frame_batch = torch.permute(frame_batch, (1, 0, 2, 3))
+        frame_batch = frame_batch.permute((1, 0, 2, 3))
        
         assert (frame_batch.shape == torch.Size([3, 9, 64, 64]))
         
