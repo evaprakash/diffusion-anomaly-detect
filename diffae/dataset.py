@@ -395,10 +395,11 @@ class Video_Dataset(Dataset):
         self.path = "/home/eprakash/shanghaitech/scripts/full_train_img_to_video.txt"
         self.original_resolution = original_resolution
         self.data, self.idx_to_vid, self.vid_to_idxs = self.load_data(path)
-        self.length = len(self.data)
         self.stride = stride
-        self.frame_batch_size = 4
+        self.frame_batch_size = 4 # Number of frames to the right and left of center frame
         self.img_size = image_size
+        self.length = len(self.data) - len(self.vid_to_idxs) * self.stride * self.frame_batch_size * 2 # Account for frames that cannot be used as center frame
+        self.get_center_frames() # Set center frames to be used in __getitem__() 
         do_augment = False
         transform = [
             transforms.Resize(image_size),
@@ -428,19 +429,33 @@ class Video_Dataset(Dataset):
                 i += 1
         print("DONE LOADING DATA!")
         return data, idx_to_vid, vid_to_idxs
+    
+    def get_center_frames(self):
+        self.idx_to_centerframe = {}
+        i = 0
+        for vid, idxs in self.vid_to_idxs.items():
+            num_frames = len(idxs)
+            start_idx = self.frame_batch_size * self.stride
+            end_idx = num_frames - self.frame_batch_size * self.stride 
+            for idx in range(start_idx, end_idx):
+                self.idx_to_centerframe[i] = idxs[idx]
+                i += 1
+        assert i == self.length # Should fill up all usable indices
+        return
 
     def __len__(self):
-        return self.length # TODO: Update length to account for indexing changes to prevent repeat sampling
+        return self.length 
 
     def __getitem__(self, index):
+        index = self.idx_to_centerframe[index]
         img = self.data[index]
         vid = self.idx_to_vid[index]
         idxs = self.vid_to_idxs[vid]
         left_lim = index - self.frame_batch_size * self.stride
-        right_lim = index + self.frame_batch_size * self.stride + 1 # +1 since not inclusive
+        right_lim = index + self.frame_batch_size * self.stride + 1 # + 1 since not inclusive
         
-        # TODO: Change starting indexes to prevent repeat sampling
-        
+        # The following code should never be triggered
+        # =================
         if (left_lim < min(idxs)):
             right_lim += abs(min(idxs) - abs(left_lim)) 
             left_lim = min(idxs)
@@ -448,6 +463,7 @@ class Video_Dataset(Dataset):
         if (right_lim > max(idxs) + 1):
             left_lim = left_lim - abs(max(idxs) + 1 - abs(right_lim)) 
             right_lim = max(idxs) + 1
+        # ================== 
         
         assert (right_lim - left_lim == self.frame_batch_size * self.stride * 2 + 1)
 
