@@ -390,11 +390,13 @@ class Video_Dataset(Dataset):
                  do_augment: bool = False,
                  do_transform: bool = True,
                  do_normalize: bool = True,
+                 stride: int = 2, # Stride between frames (1 = use all frames, 2 = skip every other frame, etc.) # TODO (Zane): Implement this
                  **kwargs):
         self.path = "/home/eprakash/shanghaitech/scripts/full_train_img_to_video.txt"
         self.original_resolution = original_resolution
         self.data, self.idx_to_vid, self.vid_to_idxs = self.load_data(path)
         self.length = len(self.data)
+        self.stride = stride
         self.frame_batch_size = 4
         self.img_size = image_size
         do_augment = False
@@ -417,7 +419,6 @@ class Video_Dataset(Dataset):
         data = []
         idx_to_vid = {}
         vid_to_idxs = defaultdict(list)
-        
         with open(self.path, "r") as fp:
             for line in fp:
                 img, vid =  line.split(",")
@@ -429,14 +430,16 @@ class Video_Dataset(Dataset):
         return data, idx_to_vid, vid_to_idxs
 
     def __len__(self):
-        return self.length
+        return self.length # TODO: Update length to account for indexing changes to prevent repeat sampling
 
     def __getitem__(self, index):
         img = self.data[index]
         vid = self.idx_to_vid[index]
         idxs = self.vid_to_idxs[vid]
-        left_lim = index - self.frame_batch_size
-        right_lim = index + self.frame_batch_size + 1
+        left_lim = index - self.frame_batch_size * self.stride
+        right_lim = index + self.frame_batch_size * self.stride + 1 # +1 since not inclusive
+        
+        # TODO: Change starting indexes to prevent repeat sampling
         
         if (left_lim < min(idxs)):
             right_lim += abs(min(idxs) - abs(left_lim)) 
@@ -446,13 +449,13 @@ class Video_Dataset(Dataset):
             left_lim = left_lim - abs(max(idxs) + 1 - abs(right_lim)) 
             right_lim = max(idxs) + 1
         
-        assert (right_lim - left_lim == self.frame_batch_size * 2 + 1)
+        assert (right_lim - left_lim == self.frame_batch_size * self.stride * 2 + 1)
 
         frame_batch = None
         
         n = 0
         
-        for i in range(left_lim, right_lim):
+        for i in range(left_lim, right_lim, self.stride):
             frame_img = self.data[i]
             frame_img = Image.open(frame_img)
             frame_img = frame_img.convert('RGB')
