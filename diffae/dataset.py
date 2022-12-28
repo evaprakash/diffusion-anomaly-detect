@@ -390,7 +390,7 @@ class Video_Dataset(Dataset):
                  do_augment: bool = False,
                  do_transform: bool = True,
                  do_normalize: bool = True,
-                 stride: int = 2, # Stride between frames (1 = use all frames, 2 = skip every other frame, etc.) # TODO (Zane): Implement this
+                 stride: int = 1, # Stride between frames (1 = use all frames, 2 = skip every other frame, etc.) # TODO (Zane): Implement this
                  **kwargs):
         self.path = "/home/eprakash/shanghaitech/scripts/full_train_img_to_video.txt"
         self.original_resolution = original_resolution
